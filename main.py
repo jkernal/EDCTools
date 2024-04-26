@@ -102,7 +102,6 @@ def preamble():
     #print("\u001b[37m\u001b[0mPython Version: " + version[:7])
     if version[:4] != "3.10":
         print(f"{ansi['Bright Yellow']}***Warning: The version of Python is different from what this script was written on.***{ansi['Reset']}")
-        return None
     owner = "jdsdev96"
     repo = "EDC-ImportEventsTool"
     print("Checking for updates...", end="",flush=True)
@@ -115,7 +114,33 @@ def preamble():
     except:
         print("[FAILED]")
         print("\u001b[33;1m***Warning: Could not connect to repository. Version check failed.***")
-    #print(environ)
+    print("""
+      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                  @@@@@@@@@@@@@             
+      @                     @@               @@             @@@               @@@         
+      @                     @@               @@    @@     @@      @@@@@@@@       @@@      
+      @                     @@                @@@@@  @@ @@     @@@@@@@@@@@       @        
+      @                     @@                         @@   @@@@@@@@@@@@@@     @@         
+      @        @@@@@@@@@@@@@@@       @@@@@            @@   @@@@@@@@@@   @@@@@ @           
+      @        @@           @@       @@   @@@        @@   @@@@@@@            @            
+      @        @@           @@       @@      @@      @@  @@@@@@@     @                    
+      @        @@@@@@@@@@@@@@@       @@       @@       @@@@@@@@     @@                    
+      @                     @@       @@        @@         @@@@      @@                    
+      @                     @@       @@        @@         @@@@     @@@@                   
+      @                     @@       @@        @@        @@@@@    @@@@@                   
+      @                     @@       @@        @      @@@@@@@@@    @@@                    
+      @        @@@@@@@@@@@@@@@       @@       @@      @@ @@@@@@@                          
+      @        @@           @@       @@      @@        @@ @@@@@@@            @            
+      @        @@           @@       @@   @@@           @@ @@@@@@@@@@@@@@@@@@ @@          
+      @        @@@@@@@@@@@@@@@       @@@@@             @@    @@@@@@@@@@        @@         
+      @                     @@                  @@@@@@@@@@     @@@@@@@@          @@       
+      @                     @@                  @        @@@        @@@           @@      
+      @       @@            @@   @      @@      @           @@@                 @@@       
+      @@@@@  @@@       @@   @@   @@     @@ @@@@@@              @@@@@@@@@@@@@@@@           
+           @@@ @@@@@@@@@@ @@   @@@@ @@@@@@@@                                              
+            @@  @@    @ @@@     @ @@@  @@@@                                               
+                @@       @@        @@    @@""")
+    
+    
 
 
 def get_current_cursor_pos():
@@ -227,9 +252,8 @@ def done():
 
 
 #main code
-def main():
+def EventsTool():
     #run preamble
-    preamble()
 
     #find file locations
     file_locs = manages_files()#file_locs[template, output, input]
@@ -303,5 +327,5 @@ def main():
     done()
     #end of main
 
-
-main()
+preamble()
+#EventsTool()
