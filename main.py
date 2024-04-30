@@ -1,8 +1,8 @@
-#FILENAME:ImportEvents.py
+#FILENAME:main.py
 #AUTHOR:Jonathan Shambaugh
-#PURPOSE: To extract the comments given in a Toyopuc project and write them to the corresponding address in the template for easy event importing.
-#NOTES: See the github repository for more info. https://github.com/jdsdev96/EDC-ImportEventsTool
-#VERSION: v1.2.3
+#PURPOSE: A CLI tool that consolidates useful python tools for EDC.
+#NOTES: See the github repository for more info.
+#VERSION: v0.0.0
 #START DATE: 17 Oct 22
 
 from sys import executable, version
@@ -17,40 +17,16 @@ from msvcrt import getch, kbhit
 
 
 
-ansi = {
-    "Black": "\u001b[30m",
-    "Red": "\u001b[31m",
-    "Green": "\u001b[32m",
-    "Yellow": "\u001b[33m",
-    "Blue": "\u001b[34m",
-    "Magenta": "\u001b[35m",
-    "Cyan": "\u001b[36m",
-    "White": "\u001b[37m",
-    "Bright Black": "\u001b[30;1m",
-    "Bright Red": "\u001b[31;1m",
-    "Bright Green": "\u001b[32;1m",
-    "Bright Yellow": "\u001b[33;1m",
-    "Bright Blue": "\u001b[34;1m",
-    "Bright Magenta": "\u001b[35;1m",
-    "Bright Cyan": "\u001b[36;1m",
-    "Bright White": "\u001b[37;1m",
-    "Bold": "\u001b[1m",
-    "Underline": "\u001b[4m",
-    "Reset": "\u001b[0m"
-}
+V = "v0.0.0"
 
 
-
-v = "v0.0.0"
-
-
-t1 = perf_counter()
+T1 = perf_counter()
 
 
 
 #installs libraries using the command line
 def install_lib(lib):
-    print(f"{ansi['Yellow']}\nInstalling {lib}...")
+    print(f"\nInstalling {lib}...")
     # implement pip as a subprocess:
     check_call([executable, '-m', 'pip', 'install', lib])
 
@@ -64,7 +40,7 @@ def install_lib(lib):
 try:
     from openpyxl import load_workbook
 except ModuleNotFoundError:
-    print(f"{ansi['Bright Red']}Openpyxl library is not installed.")
+    print(f"Openpyxl library is not installed.")
     install_lib("Openpyxl")
     from openpyxl import load_workbook
 
@@ -72,7 +48,7 @@ except ModuleNotFoundError:
 try:
     from requests import get
 except ModuleNotFoundError:
-    print(f"{ansi['Bright Red']}Requests library is not installed.")
+    print(f"Requests library is not installed.")
     install_lib("requests")
     from requests import get
 
@@ -80,23 +56,23 @@ except ModuleNotFoundError:
 try:
     from typer import *
 except ModuleNotFoundError:
-    print(f"{ansi['Bright Red']}Requests library is not installed.")
+    print(f"Requests library is not installed.")
     install_lib("typer")
     from typer import *
 
 #check if alive-progress library is installed, if not, install it
 try:
-    from alive-progress import *
+    from alive_progress import *
 except ModuleNotFoundError:
-    print(f"{ansi['Bright Red']}Requests library is not installed.")
+    print(f"Requests library is not installed.")
     install_lib("alive-progress")
-    from alive-progress import *
+    from alive_progress import *
 
 #check if colorama library is installed, if not, install it
 try:
     from colorama import *
 except ModuleNotFoundError:
-    print(f"{ansi['Bright Red']}Requests library is not installed.")
+    print(f"Requests library is not installed.")
     install_lib("colorama")
     from colorama import *
 
@@ -118,28 +94,35 @@ class progressBar:
         self.total = total
 
 
+#Resets the text color
+def done():
+    print("\u001b[37m\u001b[0m")
+    time_elapsed = round((perf_counter() - T1), 3)
+    print(" ".join([f"Execution time: ", f"{time_elapsed}", "sec(s)"]))
+    #input("throwaway")
+    exit()
+
 
 #print title and check python version
 def preamble():
     system('color')
-    print(f"{ansi['Underline']}{ansi['Bright Magenta']}Events Layout Import Tool{ansi['Reset']}")
-    print(v)
+    print(f"Events Layout Import Tool")
+    print(V)
     #print("\u001b[37m\u001b[0mPython Version: " + version[:7])
     if version[:4] != "3.10":
-        print(f"{ansi['Bright Yellow']}***Warning: The version of Python is different from what this script was written on.***{ansi['Reset']}")
+        print(f"***Warning: The version of Python is different from what this script was written on.***")
     owner = "jkernal"
     repo = "EDCTools"
     print("Checking for updates...", end="",flush=True)
     try:
         response = get(f"https://api.github.com/repos/{owner}/{repo}/releases/latest")
         #print(response.json())
-        print("[DONE]")
-        if v != response.json()["tag_name"]:
-            print(f"{ansi['Bright Yellow']}***Warning: There is a new release of this tool.***")
+        if V != response.json()["tag_name"]:
+            print("[DONE]")
+            print(f"***Warning: There is a new release of this tool.***")
     except:
         print("[FAILED]")
-        print("\u001b[33;1m***Warning: Could not connect to repository. Version check failed.***")
-    print(f"{ansi["Reset"]}")
+        print("***Warning: Could not connect to repository. Version check failed.***")
     print("""                                                 
    ↖↗→→→→→→→→→→→→→→↗→→→→→→→→→→↙          ↖↓→↓←←←←↙↘↘←       
    ↖→↖↖↖↖↖↖↖↖↖↖↖↖↖↖↑↖↖↖↖↖↖↖↖↖↖↙↙  ←    →↙←↖↖↖←↓↓↙↖↖↖←↙↘←    
@@ -188,34 +171,33 @@ def manages_files():
         temp_loc = temp_dir + '//' + listdir(temp_dir)[0]
     except FileNotFoundError:
         print("\n")
-        print(f"{ansi['Bold']}{ansi['Bright Red']}The template directory was not found.\n\nPlease add the template directory and restart.")
+        print(f"The template directory was not found.\n\nPlease add the template directory and restart.")
         done()
     except IndexError:
         print("\n")
-        print(f"{ansi['Bold']}{ansi['Bright Red']}The template file was not found.\n\nPlease add the template file to the template directory and restart.")
+        print(f"The template file was not found.\n\nPlease add the template file to the template directory and restart.")
         done()
     try:
         in_loc = in_dir + '//' + listdir(in_dir)[0]
     except FileNotFoundError:
         print("\n")
-        print(f"{ansi['Bold']}{ansi['Bright Red']}The input file or directory was not found.\n\nPlease add the input file to the input directory and restart.")
+        print(f"The input file or directory was not found.\n\nPlease add the input file to the input directory and restart.")
         done()
     except IndexError:
         print("\n")
-        print(f"{ansi['Bold']}{ansi['Bright Red']}The input file was not found.\n\nPlease add the input file to the input directory and restart.")
+        print(f"The input file was not found.\n\nPlease add the input file to the input directory and restart.")
         done()
     #Copying template file to output directory
     try:
         copy(temp_loc, out_dir + '//out_' + listdir(temp_dir)[0])
     except FileNotFoundError:
         print("\n")
-        print(f"{ansi['Bold']}{ansi['Bright Red']}The output directory was not found.\n\nPlease add the output directory and restart.")
+        print(f"The output directory was not found.\n\nPlease add the output directory and restart.")
         done()
     except Exception as e:
-        print(f"{ansi['Bold']}{ansi['Bright Red']}Make sure to close the template file or make sure template file is not being used by another program.")
+        print(f"Make sure to close the template file or make sure template file is not being used by another program.")
         print(e)
         done()
-
 
     out_loc = out_dir + '//' + listdir(out_dir)[0]
     locations = [temp_loc, out_loc, in_loc]
@@ -229,7 +211,7 @@ def perm_check(locs):
         permissions = [access(locs[i], R_OK), access(locs[i], W_OK), access(locs[i], X_OK)]
         for j in range(len(permissions)):
             if not permissions[j]:
-                print(f"{ansi['Bold']}{ansi['Bright Red']}The script does not have {access_type[j]} access to the {file_names[i]} file. Make sure the file is closed and permissions are set.")
+                print(f"The script does not have {access_type[j]} access to the {file_names[i]} file. Make sure the file is closed and permissions are set.")
             else:
                 #print(f"\u001b[1m\u001b[31;1mThe script does have {access_type[j]} access to the {file_names[i]} file. Make sure the file is closed and permissions are set.")
                 continue
@@ -250,24 +232,15 @@ def get_address_comment_array_from_input(location):
     try:
         array = list(reader(open(location, encoding= "ISO8859")))
     except PermissionError:
-        print(f"{ansi['Bold']}{ansi['Bright Red']}Error: Could not access input file.")
+        print(f"Error: Could not access input file.")
         done()
     except:
-        print(f"""{ansi['Bright Red']}{ansi['Bold']}An error occurred while reading the Toyopuc Comment file.\n\n
+        print(f"""An error occurred while reading the Toyopuc Comment file.\n\n
             Possible Causes:\n
             -Too many fields in the file (max 131072)
             -The data is not supported under 'ISO8859' encoding
             -The file is in use""")
     return array
-
-
-#Resets the text color
-def done():
-    print("\u001b[37m\u001b[0m")
-    time_elapsed = round((perf_counter() - t1), 3)
-    print(" ".join([f"{ansi['Reset']}Execution time: ", f"{time_elapsed}", "sec(s)"]))
-    #input("throwaway")
-    exit()
 
 
 #main code
@@ -296,7 +269,7 @@ def EventsTool():
 
     match_count, address_array_len = 0, len(address_array)
     
-    print(f"\n{ansi['Reset']}{ansi['Green']}Working on it...",flush=True, end="")
+    print(f"\nWorking on it...",flush=True, end="")
 
     #set the progress bar total and start the progress bar thread
     address_prog_bar = progressBar(0, address_array_len)
@@ -338,13 +311,14 @@ def EventsTool():
     
     #display stats and warning if needed
     print("\nDone.", flush=True)
-    print(f"\n{ansi['Bright Blue']}Number of comments found:{ansi['Yellow']}" + str(match_count))
+    print(f"\nNumber of comments found:" + str(match_count))
     if match_count == 0:
-        print(f"{ansi['Bright Yellow']}***No matches were found. Make sure your input and template files are correct***")
+        print(f"***No matches were found. Make sure your input and template files are correct***")
 
     #reset and exit()
     done()
     #end of main
+
 
 preamble()
 #EventsTool()
