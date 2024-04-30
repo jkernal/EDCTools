@@ -7,7 +7,7 @@
 
 from sys import executable, version
 from subprocess import check_call, check_output
-from os import system, getcwd, listdir, access, R_OK, W_OK, X_OK
+from os import system, getcwd, listdir, access, environ, path, name, R_OK, W_OK, X_OK
 from csv import reader
 from shutil import copy
 from time import perf_counter
@@ -16,12 +16,13 @@ from threading import Thread
 from msvcrt import getch, kbhit
 
 
-
 V = "v0.0.0"
 
 
 T1 = perf_counter()
 
+
+OS = name
 
 
 #installs libraries using the command line
@@ -76,25 +77,35 @@ except ModuleNotFoundError:
     install_lib("colorama")
     from colorama import *
 
-#define the progress bar class
-class progressBar:
-
-    def print_progress_bar(self):
-        curs = get_current_cursor_pos()
-        while self.prog < self.total:
-            percent = round((self.prog / self.total) * 100)
-            bar = '█' * int(percent) + '-' * (100 - int(percent))#'█'
-            print(f"\033[{curs[0]};{curs[1]}f|{bar}| {percent:.0f}%", flush=True)
-            if percent == 100:
-                break
-        return None
-
-    def __init__(self, prog, total):
-        self.prog = prog
-        self.total = total
+#check if orjson library is installed, if not, install it
+try:
+    from orjson import *
+except ModuleNotFoundError:
+    print(f"Requests library is not installed.")
+    install_lib("colorama")
+    from orjson import *
 
 
-#Resets the text color
+file_exists = path.exists("./data.json")
+if not file_exists:
+    k = open("data.json", "x")
+    k.close()
+    if OS == "Windows":
+        default_config = {'user': environ.get('USERNAME'), 'debug': True, 'first_flag': True}
+    else:
+        default_config = {'user': 'unknown', 'debug': True, 'first_flag': True}
+    with open("data.json", "w") as h:
+        dumps(default_config)
+    h.close()
+
+with open("data.json", "r") as file:
+    config_data = loads(file)
+file.close()
+print(config_data)
+
+
+
+#function for required tasks before program exit
 def done():
     print("\u001b[37m\u001b[0m")
     time_elapsed = round((perf_counter() - T1), 3)
@@ -103,13 +114,11 @@ def done():
     exit()
 
 
-#print title and check python version
+#print title and checks python version
 def preamble():
     system('color')
     print(f"Events Layout Import Tool")
-    print(V)
-    #print("\u001b[37m\u001b[0mPython Version: " + version[:7])
-    if version[:4] != "3.10":
+    if version[:4] != "3.12":
         print(f"***Warning: The version of Python is different from what this script was written on.***")
     owner = "jkernal"
     repo = "EDCTools"
@@ -141,25 +150,6 @@ def preamble():
     ↓↓↓↘↗↘↙↓↙↙↓→↗↓↘→→↓↗↘→↘↗→↙→←             ←↙↓↘↓↙←         
         ← ↓↗↙ ↙↖↘↗   ↓ ↑→ ←↙→                               
                        ←   ↖←   """)
-    
-    
-
-
-def get_current_cursor_pos():
-    print("\n")
-    print("\033[A\033[6n")
-    keep_going = True
-    buff = ""
-    while keep_going:
-        buff += getch().decode("ASCII")
-        keep_going = kbhit()
-    new_buffer =buff.replace("\x1b[", "")
-    if len(new_buffer) == 5:
-        return [new_buffer[:2], new_buffer[3]]
-    elif len(new_buffer) == 4:
-        return [new_buffer[0], new_buffer[2]]
-    else:
-        return [0,0]
 
 
 #Confirming, finding, and copying files.
@@ -204,6 +194,7 @@ def manages_files():
     return locations
 
 
+#check permissions on files needed.
 def perm_check(locs):
     file_names = ["template", "output", "input"]
     access_type = ["read", "write", "execute"]
@@ -219,33 +210,33 @@ def perm_check(locs):
     return None
 
 
-#gets address that need comments
-def get_address_array_from_temp(sheet):
-    array = []
-    for i in range(sheet.max_row):
-        array.append([sheet.cell(i+3,2).value, i + 3])
-    return array
-
-
-#gets all address that have comments
-def get_address_comment_array_from_input(location):
-    try:
-        array = list(reader(open(location, encoding= "ISO8859")))
-    except PermissionError:
-        print(f"Error: Could not access input file.")
-        done()
-    except:
-        print(f"""An error occurred while reading the Toyopuc Comment file.\n\n
-            Possible Causes:\n
-            -Too many fields in the file (max 131072)
-            -The data is not supported under 'ISO8859' encoding
-            -The file is in use""")
-    return array
-
-
-#main code
+#Tool for extracting address comments dynamically 
 def EventsTool():
-    #run preamble
+    
+    
+    #gets address that need comments
+    def get_address_array_from_temp(sheet):
+        array = []
+        for i in range(sheet.max_row):
+            array.append([sheet.cell(i+3,2).value, i + 3])
+        return array
+    
+    
+    #gets all address that have comments
+    def get_address_comment_array_from_input(location):
+        try:
+            array = list(reader(open(location, encoding= "ISO8859")))
+        except PermissionError:
+            print(f"Error: Could not access input file.")
+            done()
+        except:
+            print(f"""An error occurred while reading the Toyopuc Comment file.\n\n
+                Possible Causes:\n
+                -Too many fields in the file (max 131072)
+                -The data is not supported under 'ISO8859' encoding
+                -The file is in use""")
+        return array
+
 
     #find file locations
     file_locs = manages_files()#file_locs[template, output, input]
@@ -271,11 +262,6 @@ def EventsTool():
     
     print(f"\nWorking on it...",flush=True, end="")
 
-    #set the progress bar total and start the progress bar thread
-    address_prog_bar = progressBar(0, address_array_len)
-    t1 = Thread(target=address_prog_bar.print_progress_bar)
-    t1.start()
-
     #loop through the addresses and compare to the array with comments
     for i in range(address_array_len):
         for address in address_comment_array:
@@ -297,14 +283,6 @@ def EventsTool():
                     match_count+=1
                 else:
                     continue
-            else:
-                address_prog_bar.prog = i
-    
-    #set progress on progress bar to 100
-    address_prog_bar.prog = address_array_len
-    
-    #wait for progress bar thread to finish
-    t1.join()
     
     #save changes to the output file
     wb.save(file_locs[1])
