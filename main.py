@@ -41,14 +41,14 @@ ansi = {
 
 
 
-v = "v1.2.4"
+v = "v0.0.0"
 
 
 t1 = perf_counter()
 
 
 
-#installs openpyxl using the command line
+#installs libraries using the command line
 def install_lib(lib):
     print(f"{ansi['Yellow']}\nInstalling {lib}...")
     # implement pip as a subprocess:
@@ -60,13 +60,15 @@ def install_lib(lib):
 
     print(installed_packages)
 
-#check if openpyxl is installed, if not, install it
+#check if openpyxl library is installed, if not, install it
 try:
     from openpyxl import load_workbook
 except ModuleNotFoundError:
     print(f"{ansi['Bright Red']}Openpyxl library is not installed.")
     install_lib("Openpyxl")
     from openpyxl import load_workbook
+
+#check if requests library is installed, if not, install it
 try:
     from requests import get
 except ModuleNotFoundError:
@@ -74,6 +76,29 @@ except ModuleNotFoundError:
     install_lib("requests")
     from requests import get
 
+#check if typer library is installed, if not, install it
+try:
+    from typer import *
+except ModuleNotFoundError:
+    print(f"{ansi['Bright Red']}Requests library is not installed.")
+    install_lib("typer")
+    from typer import *
+
+#check if alive-progress library is installed, if not, install it
+try:
+    from alive-progress import *
+except ModuleNotFoundError:
+    print(f"{ansi['Bright Red']}Requests library is not installed.")
+    install_lib("alive-progress")
+    from alive-progress import *
+
+#check if colorama library is installed, if not, install it
+try:
+    from colorama import *
+except ModuleNotFoundError:
+    print(f"{ansi['Bright Red']}Requests library is not installed.")
+    install_lib("colorama")
+    from colorama import *
 
 #define the progress bar class
 class progressBar:
@@ -102,8 +127,8 @@ def preamble():
     #print("\u001b[37m\u001b[0mPython Version: " + version[:7])
     if version[:4] != "3.10":
         print(f"{ansi['Bright Yellow']}***Warning: The version of Python is different from what this script was written on.***{ansi['Reset']}")
-    owner = "jdsdev96"
-    repo = "EDC-ImportEventsTool"
+    owner = "jkernal"
+    repo = "EDCTools"
     print("Checking for updates...", end="",flush=True)
     try:
         response = get(f"https://api.github.com/repos/{owner}/{repo}/releases/latest")
@@ -114,31 +139,25 @@ def preamble():
     except:
         print("[FAILED]")
         print("\u001b[33;1m***Warning: Could not connect to repository. Version check failed.***")
-    print("""
-      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                  @@@@@@@@@@@@@             
-      @                     @@               @@             @@@               @@@         
-      @                     @@               @@    @@     @@      @@@@@@@@       @@@      
-      @                     @@                @@@@@  @@ @@     @@@@@@@@@@@       @        
-      @                     @@                         @@   @@@@@@@@@@@@@@     @@         
-      @        @@@@@@@@@@@@@@@       @@@@@            @@   @@@@@@@@@@   @@@@@ @           
-      @        @@           @@       @@   @@@        @@   @@@@@@@            @            
-      @        @@           @@       @@      @@      @@  @@@@@@@     @                    
-      @        @@@@@@@@@@@@@@@       @@       @@       @@@@@@@@     @@                    
-      @                     @@       @@        @@         @@@@      @@                    
-      @                     @@       @@        @@         @@@@     @@@@                   
-      @                     @@       @@        @@        @@@@@    @@@@@                   
-      @                     @@       @@        @      @@@@@@@@@    @@@                    
-      @        @@@@@@@@@@@@@@@       @@       @@      @@ @@@@@@@                          
-      @        @@           @@       @@      @@        @@ @@@@@@@            @            
-      @        @@           @@       @@   @@@           @@ @@@@@@@@@@@@@@@@@@ @@          
-      @        @@@@@@@@@@@@@@@       @@@@@             @@    @@@@@@@@@@        @@         
-      @                     @@                  @@@@@@@@@@     @@@@@@@@          @@       
-      @                     @@                  @        @@@        @@@           @@      
-      @       @@            @@   @      @@      @           @@@                 @@@       
-      @@@@@  @@@       @@   @@   @@     @@ @@@@@@              @@@@@@@@@@@@@@@@           
-           @@@ @@@@@@@@@@ @@   @@@@ @@@@@@@@                                              
-            @@  @@    @ @@@     @ @@@  @@@@                                               
-                @@       @@        @@    @@""")
+    print(f"{ansi["Reset"]}")
+    print("""                                                 
+   ↖↗→→→→→→→→→→→→→→↗→→→→→→→→→→↙          ↖↓→↓←←←←↙↘↘←       
+   ↖→↖↖↖↖↖↖↖↖↖↖↖↖↖↖↑↖↖↖↖↖↖↖↖↖↖↙↙  ←    →↙←↖↖↖←↓↓↙↖↖↖←↙↘←    
+   ↖→↖↖↖↖↖↖↖↖↖↖↖↖↖↖↑↖↖↖↖↖↖↖↖↖↖←↙↙↓←↓↓↘↓↖↖↙→→→→→→→→↖↖↖↙↓↖    
+   ↖→↖↖↖↖↖↙↓↓↓↓↓↓↓↓↑↖↖↖↖↖↙↙←↖↖↖↖↖↖↖↖↓↙↖←↑↑↑→→→→→→↓↙←↓↙      
+   ↖→↖↖↖↖↖↓←       ↑↖↖↖↖←↑ ↖↓↓←↖↖↖↖↙↙↖↙↑↑↑↑↘      ↖↙←       
+   ↖→↖↖↖↖↖↓↓←←←←←←↙↑↖↖↖↖←↑    ↓↙↖↖↖↖↓↙↑↑↑↑   ↖↓             
+   ↖→↖↖↖↖↖↖↖↖↖↖↖↖↖↖↑↖↖↖↖←↑     ↘↓↖↖↖↖↖↖↑↑↖   ↓↗             
+   ↖→↖↖↖↖↖↖↖↖↖↖↖↖↖↖↑↖↖↖↖←↑     →↓↖↖↖↖↖↖↑→↖  ↓↑↑↘            
+   ↖→↖↖↖↖↖↖↖↖↖↖↖↖↖↖↑↖↖↖↖←↑     ↓↙↖↖↖↑↓←←←↗  ↖↑↗             
+   ↖→↖↖↖↖↖↙↙      ↖↑↖↖↖↖←↑    ↓↓↖↖↖↖↑←←←←←↑                 
+   ↖→↖↖↖↖↖↙←       ↑↖↖↖↖←↑  ↘↘↖↖↖↖↖↖↖↙↙↙←←←←←↑↘↓↘↗↘↙↓←      
+   ↖→↖↖↖↖↖←↙↙↙↙↙↙↙↓↑↖↖↖↖↖↙↙←↖↖↖↖↖↓↓↖↓↑←↖↖↙←←←←←↙↖↖↖↖↖↙↙     
+   ↖→↖↖↖↖↖↖↖↖↖↖↖↖↖↖↑↖↖↖↖↖↖↖↖↖↖↖←←  ←← ↓↘↖↖↖↖↙↙↙←↖↖↖↖↖↖↙→↖   
+   ↖→↖↖↖↖↘↓↖↖↖↖↓←↖↖↑↖↖→↖↖↖↙↗↖↖↖↙↙↖      ↓↙↓↙↖↖↖↖↖↖←↙↙↓↙     
+    ↓↓↓↘↗↘↙↓↙↙↓→↗↓↘→→↓↗↘→↘↗→↙→←             ←↙↓↘↓↙←         
+        ← ↓↗↙ ↙↖↘↗   ↓ ↑→ ←↙→                               
+                       ←   ↖←   """)
     
     
 
