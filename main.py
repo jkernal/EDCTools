@@ -14,6 +14,7 @@ from time import perf_counter
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from msvcrt import getch, kbhit
+import json
 
 
 V = "v0.0.0"
@@ -79,11 +80,11 @@ except ModuleNotFoundError:
 
 #check if orjson library is installed, if not, install it
 try:
-    from orjson import *
+    import orjson
 except ModuleNotFoundError:
     print(f"Requests library is not installed.")
     install_lib("colorama")
-    from orjson import *
+    import orjson
 
 
 file_exists = path.exists("./data.json")
@@ -91,18 +92,20 @@ if not file_exists:
     k = open("data.json", "x")
     k.close()
     if OS == "Windows":
-        default_config = {'user': environ.get('USERNAME'), 'debug': True, 'first_flag': True}
+        default_config = {'user': environ.get('USERNAME'), 'debug': True, 'flag': True}
     else:
-        default_config = {'user': 'unknown', 'debug': True, 'first_flag': True}
+        default_config = {'user': 'unknown', 'debug': True, 'flag': True}
     with open("data.json", "w") as h:
-        dumps(default_config)
+        write_config = json.dumps(default_config)
+        h.write(write_config)
     h.close()
 
 with open("data.json", "r") as file:
-    config_data = loads(file)
+    config_data = json.load(file)
 file.close()
-print(config_data)
 
+
+app = Typer()
 
 
 #function for required tasks before program exit
@@ -211,7 +214,8 @@ def perm_check(locs):
 
 
 #Tool for extracting address comments dynamically 
-def EventsTool():
+@app.command()
+def EventsTool(string: str = Argument(..., help = """Prints input string""")):
     
     
     #gets address that need comments
@@ -298,5 +302,8 @@ def EventsTool():
     #end of main
 
 
-preamble()
+run()
+
+
+#preamble()
 #EventsTool()
