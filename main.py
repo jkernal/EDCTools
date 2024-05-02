@@ -23,9 +23,6 @@ V = "v0.0.0"
 T1 = perf_counter()
 
 
-OS = name
-
-
 #installs libraries using the command line
 def install_lib(lib):
     print(f"\nInstalling {lib}...")
@@ -37,6 +34,18 @@ def install_lib(lib):
     installed_packages = [r.decode().split('==')[0] for r in requests.split()]
 
     print(installed_packages)
+
+#check if picologging library is installed, if not, install it
+try:
+    import picologging as logging
+except ModuleNotFoundError:
+    print(f"Picologging library is not installed.")
+    install_lib("picologging")
+    import picologging as logging
+
+#configure logger
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename="data.log", encoding="utf-8")
 
 #check if openpyxl library is installed, if not, install it
 try:
@@ -88,13 +97,10 @@ except ModuleNotFoundError:
 
 
 file_exists = path.exists("./data.json")
+default_config = {'user': environ.get('USERNAME'), 'debug': True, 'flag': True}
 if not file_exists:
     k = open("data.json", "x")
     k.close()
-    if OS == "Windows":
-        default_config = {'user': environ.get('USERNAME'), 'debug': True, 'flag': True}
-    else:
-        default_config = {'user': 'unknown', 'debug': True, 'flag': True}
     with open("data.json", "w") as h:
         write_config = json.dumps(default_config)
         h.write(write_config)
@@ -214,7 +220,6 @@ def perm_check(locs):
 
 
 #Tool for extracting address comments dynamically 
-@app.command()
 def EventsTool(string: str = Argument(..., help = """Prints input string""")):
     
     
@@ -300,9 +305,6 @@ def EventsTool(string: str = Argument(..., help = """Prints input string""")):
     #reset and exit()
     done()
     #end of main
-
-
-run()
 
 
 #preamble()
