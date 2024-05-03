@@ -26,8 +26,11 @@ T1 = perf_counter()
 #installs libraries using the command line
 def install_lib(lib):
     print(f"\nInstalling {lib}...")
-    # implement pip as a subprocess:
-    check_call([executable, '-m', 'pip', 'install', lib])
+    try:
+        # implement pip as a subprocess:
+        check_call([executable, '-m', 'pip', 'install', lib])
+    except:
+        check_call([executable, '-m', 'pip3', 'install', lib])
 
     # process output with an API in the subprocess module:
     requests = check_output([executable, '-m', 'pip','freeze'])
@@ -86,14 +89,6 @@ except ModuleNotFoundError:
     print(f"Requests library is not installed.")
     install_lib("colorama")
     from colorama import *
-
-#check if orjson library is installed, if not, install it
-try:
-    import orjson
-except ModuleNotFoundError:
-    print(f"Requests library is not installed.")
-    install_lib("colorama")
-    import orjson
 
 
 file_exists = path.exists("./data.json")
