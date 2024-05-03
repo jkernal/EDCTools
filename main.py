@@ -5,24 +5,6 @@
 #VERSION: v0.0.0
 #START DATE: 17 Oct 22
 
-from sys import executable, version
-from subprocess import check_call, check_output
-from os import system, getcwd, listdir, access, environ, path, name, R_OK, W_OK, X_OK
-from csv import reader
-from shutil import copy
-from time import perf_counter
-from concurrent.futures import ThreadPoolExecutor
-from threading import Thread
-from msvcrt import getch, kbhit
-import json
-
-
-V = "v0.0.0"
-
-
-T1 = perf_counter()
-
-
 #installs libraries using the command line
 def install_lib(lib):
     print(f"\nInstalling {lib}...")
@@ -36,7 +18,7 @@ def install_lib(lib):
     requests = check_output([executable, '-m', 'pip','freeze'])
     installed_packages = [r.decode().split('==')[0] for r in requests.split()]
 
-    print(installed_packages)
+    logger.info('Installed: %s',installed_packages)
 
 #check if picologging library is installed, if not, install it
 try:
@@ -48,7 +30,26 @@ except ModuleNotFoundError:
 
 #configure logger
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename="data.log", encoding="utf-8")
+logging.basicConfig(filename="./data.log", level=logging.INFO, format='%(asctime)s | %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
+
+from sys import executable, version
+from platform import system, platform
+from subprocess import check_call, check_output
+from os import system, getcwd, listdir, access, environ, path, R_OK, W_OK, X_OK
+from csv import reader
+from shutil import copy
+from time import perf_counter
+from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
+import json
+logger.info('Standard imports complete.')
+
+V = "v0.0.0"
+
+
+T1 = perf_counter()
+
 
 #check if openpyxl library is installed, if not, install it
 try:
@@ -65,14 +66,6 @@ except ModuleNotFoundError:
     print(f"Requests library is not installed.")
     install_lib("requests")
     from requests import get
-
-#check if typer library is installed, if not, install it
-try:
-    from typer import *
-except ModuleNotFoundError:
-    print(f"Requests library is not installed.")
-    install_lib("typer")
-    from typer import *
 
 #check if alive-progress library is installed, if not, install it
 try:
@@ -105,15 +98,16 @@ with open("data.json", "r") as file:
     config_data = json.load(file)
 file.close()
 
-
-app = Typer()
+if config_data['debug']:
+    logger.setLevel(logging.DEBUG)
+logger.debug('Python %s', version)
+logger.debug('%s', platform())
 
 
 #function for required tasks before program exit
 def done():
-    print("\u001b[37m\u001b[0m")
     time_elapsed = round((perf_counter() - T1), 3)
-    print(" ".join([f"Execution time: ", f"{time_elapsed}", "sec(s)"]))
+    logger.debug('Execution time: %s sec(s)', time_elapsed)
     #input("throwaway")
     exit()
 
@@ -154,6 +148,8 @@ def preamble():
     ↓↓↓↘↗↘↙↓↙↙↓→↗↓↘→→↓↗↘→↘↗→↙→←             ←↙↓↘↓↙←         
         ← ↓↗↙ ↙↖↘↗   ↓ ↑→ ←↙→                               
                        ←   ↖←   """)
+    return None
+#end of preamble
 
 
 #Confirming, finding, and copying files.
@@ -170,28 +166,23 @@ def manages_files():
     except IndexError:
         print("\n")
         print(f"The template file was not found.\n\nPlease add the template file to the template directory and restart.")
-        done()
     try:
         in_loc = in_dir + '//' + listdir(in_dir)[0]
     except FileNotFoundError:
         print("\n")
         print(f"The input file or directory was not found.\n\nPlease add the input file to the input directory and restart.")
-        done()
     except IndexError:
         print("\n")
         print(f"The input file was not found.\n\nPlease add the input file to the input directory and restart.")
-        done()
     #Copying template file to output directory
     try:
         copy(temp_loc, out_dir + '//out_' + listdir(temp_dir)[0])
     except FileNotFoundError:
         print("\n")
         print(f"The output directory was not found.\n\nPlease add the output directory and restart.")
-        done()
     except Exception as e:
         print(f"Make sure to close the template file or make sure template file is not being used by another program.")
         print(e)
-        done()
 
     out_loc = out_dir + '//' + listdir(out_dir)[0]
     locations = [temp_loc, out_loc, in_loc]
@@ -215,7 +206,7 @@ def perm_check(locs):
 
 
 #Tool for extracting address comments dynamically 
-def EventsTool(string: str = Argument(..., help = """Prints input string""")):
+def EventsTool():
     
     
     #gets address that need comments
@@ -297,10 +288,11 @@ def EventsTool(string: str = Argument(..., help = """Prints input string""")):
     if match_count == 0:
         print(f"***No matches were found. Make sure your input and template files are correct***")
 
-    #reset and exit()
+    return None
+    #end of EventsTool
+
+
+def main_loop():
     done()
-    #end of main
 
-
-#preamble()
-#EventsTool()
+main_loop()
