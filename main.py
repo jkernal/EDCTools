@@ -5,6 +5,21 @@
 #VERSION: v0.0.0
 #START DATE: 17 Oct 22
 
+
+from sys import executable, version
+from platform import system, platform
+from subprocess import check_call, check_output
+from os import system, access, environ, path, R_OK, W_OK, X_OK
+from csv import reader
+from time import perf_counter
+from concurrent.futures import ThreadPoolExecutor
+from typing import Optional
+import json
+import socket
+
+
+
+
 #installs libraries using the command line
 def install_lib(lib):
     print(f"\nInstalling {lib}...")
@@ -20,30 +35,25 @@ def install_lib(lib):
 
     logger.info('Installed: %s',installed_packages)
 
+
+OP_SYS = platform().split("-")[0]
+
+
 #check if picologging library is installed, if not, install it
-try:
-    import picologging as logging
-except ModuleNotFoundError:
-    print(f"Picologging library is not installed.")
-    install_lib("picologging")
-    import picologging as logging
+if OP_SYS == "Mac":
+    import logging as logging
+else:
+    try:
+        import picologging as logging
+    except ModuleNotFoundError:
+        print(f"Picologging library is not installed.")
+        install_lib("picologging")
+        import picologging as logging
 
 #configure logger
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename="./data.log", level=logging.INFO, format='%(asctime)s | %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+logging.basicConfig(filename="data.log", level=logging.INFO, format='%(asctime)s | %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
-
-from sys import executable, version
-from platform import system, platform
-from subprocess import check_call, check_output
-from os import system, getcwd, listdir, access, environ, path, R_OK, W_OK, X_OK
-from csv import reader
-from shutil import copy
-from time import perf_counter
-from concurrent.futures import ThreadPoolExecutor
-from threading import Thread
-import json
-logger.info('Standard imports complete.')
 
 V = "v0.0.0"
 
@@ -69,11 +79,11 @@ except ModuleNotFoundError:
 
 #check if alive-progress library is installed, if not, install it
 try:
-    from alive_progress import *
+    from alive_progress import alive_bar
 except ModuleNotFoundError:
     print(f"Requests library is not installed.")
     install_lib("alive-progress")
-    from alive_progress import *
+    from alive_progress import alive_bar
 
 #check if colorama library is installed, if not, install it
 try:
@@ -84,46 +94,71 @@ except ModuleNotFoundError:
     from colorama import *
 
 
-file_exists = path.exists("./data.json")
-default_config = {'user': environ.get('USERNAME'), 'debug': True, 'flag': True}
-if not file_exists:
-    k = open("data.json", "x")
-    k.close()
-    with open("data.json", "w") as h:
-        write_config = json.dumps(default_config)
-        h.write(write_config)
-    h.close()
+#define config class for easier attribute access and control
+class Config:
+    
+    def __init__(self) -> None:
+        config_exists = path.exists("config.json")
+        default_config = {'User': environ.get('USERNAME'), 'Log Level': 'INFO', 'Reset': True,'Input Directory': './', 'Template Directory': './', 'Output Directory': './'}
+        if not config_exists:
+            k = open("config.json", "x")
+            k.close()
+        with open("config.json", "w") as h:
+            write_config = json.dumps(default_config)
+            h.write(write_config)
+        h.close()
+        with open("config.json", "r") as file:
+            config_data = json.load(file)
+        file.close()
+        self._user = config_data['User']
+        self._log_level = config_data['Log Level']
+        self._reset = config_data['Reset']
+        self._input_dir = config_data['Input Directory']
+        self._output_dir = config_data['Output Directory']
+        self._template_dir = config_data['Template Directory']
+        return None
 
-with open("data.json", "r") as file:
-    config_data = json.load(file)
-file.close()
+    
+    def log_level(self) -> str:
+        #get the log level of config
+        return self._log_level
+    
+    
+    #@log_level.setter
+    def change_log_level(level) -> None:
+        match level:
+            case 'INFO':
+                logger.setLevel(logging.INFO)
+            case 'DEBUG':
+                logger.setLevel(logging.DEBUG)
+            case 'WARN':
+                logger.setLevel(logging.WARN)
+            case 'ERROR':
+                logger.setLevel(logging.ERROR)
+            case 'CRITICAL':
+                logger.setLevel(logging.CRITICAL)
+        return None
 
-if config_data['debug']:
-    logger.setLevel(logging.DEBUG)
-logger.debug('Python %s', version)
-logger.debug('%s', platform())
 
 
 #function for required tasks before program exit
-def done():
+def done() -> None:
     time_elapsed = round((perf_counter() - T1), 3)
     logger.debug('Execution time: %s sec(s)', time_elapsed)
     #input("throwaway")
     exit()
 
 
-#print title and checks python version
-def preamble():
+#function for tasks that need to be completed during startup
+def preamble() -> None:
     system('color')
     print(f"Events Layout Import Tool")
-    if version[:4] != "3.12":
-        print(f"***Warning: The version of Python is different from what this script was written on.***")
     owner = "jkernal"
     repo = "EDCTools"
     print("Checking for updates...", end="",flush=True)
     try:
         response = get(f"https://api.github.com/repos/{owner}/{repo}/releases/latest")
-        #print(response.json())
+        print(response.json())
         if V != response.json()["tag_name"]:
             print("[DONE]")
             print(f"***Warning: There is a new release of this tool.***")
@@ -152,44 +187,7 @@ def preamble():
 #end of preamble
 
 
-#Confirming, finding, and copying files.
-def manages_files():
-    wrk_dir = getcwd()
-    temp_dir, out_dir, in_dir = wrk_dir + '//template', wrk_dir + '//output', wrk_dir + '//input'
-    #confirming files
-    try:
-        temp_loc = temp_dir + '//' + listdir(temp_dir)[0]
-    except FileNotFoundError:
-        print("\n")
-        print(f"The template directory was not found.\n\nPlease add the template directory and restart.")
-        done()
-    except IndexError:
-        print("\n")
-        print(f"The template file was not found.\n\nPlease add the template file to the template directory and restart.")
-    try:
-        in_loc = in_dir + '//' + listdir(in_dir)[0]
-    except FileNotFoundError:
-        print("\n")
-        print(f"The input file or directory was not found.\n\nPlease add the input file to the input directory and restart.")
-    except IndexError:
-        print("\n")
-        print(f"The input file was not found.\n\nPlease add the input file to the input directory and restart.")
-    #Copying template file to output directory
-    try:
-        copy(temp_loc, out_dir + '//out_' + listdir(temp_dir)[0])
-    except FileNotFoundError:
-        print("\n")
-        print(f"The output directory was not found.\n\nPlease add the output directory and restart.")
-    except Exception as e:
-        print(f"Make sure to close the template file or make sure template file is not being used by another program.")
-        print(e)
-
-    out_loc = out_dir + '//' + listdir(out_dir)[0]
-    locations = [temp_loc, out_loc, in_loc]
-    return locations
-
-
-#check permissions on files needed.
+#check permissions on files needed
 def perm_check(locs):
     file_names = ["template", "output", "input"]
     access_type = ["read", "write", "execute"]
@@ -206,11 +204,11 @@ def perm_check(locs):
 
 
 #Tool for extracting address comments dynamically 
-def EventsTool():
+def EventsTool(Config_obj) -> None:
     
     
     #gets address that need comments
-    def get_address_array_from_temp(sheet):
+    def get_address_array_from_temp(sheet) -> list:
         array = []
         for i in range(sheet.max_row):
             array.append([sheet.cell(i+3,2).value, i + 3])
@@ -218,9 +216,9 @@ def EventsTool():
     
     
     #gets all address that have comments
-    def get_address_comment_array_from_input(location):
+    def get_address_comment_array_from_input(input_file_path) -> list:
         try:
-            array = list(reader(open(location, encoding= "ISO8859")))
+            array = list(reader(open(input_file_path, encoding= "ISO8859")))
         except PermissionError:
             print(f"Error: Could not access input file.")
             done()
@@ -234,7 +232,7 @@ def EventsTool():
 
 
     #find file locations
-    file_locs = manages_files()#file_locs[template, output, input]
+    file_locs = [Config_obj.template_dir, Config_obj.output_dir, Config_obj.input_dir]#file_locs[template, output, input]
 
     #check permissions on files
     perm_check(file_locs)
@@ -255,7 +253,7 @@ def EventsTool():
 
     match_count, address_array_len = 0, len(address_array)
     
-    print(f"\nWorking on it...",flush=True, end="")
+    print(f"\nWorking on it...")
 
     #loop through the addresses and compare to the array with comments
     for i in range(address_array_len):
@@ -292,7 +290,42 @@ def EventsTool():
     #end of EventsTool
 
 
-def main_loop():
-    done()
+def check_ports(*args, timeout: Optional[int] = 1) -> list:
+    print(type(args))
+    open_ports = []
+    for port in range(7000, 7008):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)  # Set timeout to 1 second
+        result = sock.connect_ex((ip_address, port))
+        if result == 0:
+            open_ports.append(port)
+        sock.close()
+    return open_ports
 
-main_loop()
+
+def main():
+    config = Config()
+    logger.debug('Python %s', version)
+    logger.debug('%s', platform())
+    preamble()
+    command = ''
+    print('Enter command:')
+    while command != 'q':
+        command = input('./>').lower()
+        logger.info('Command entered: %s', command)
+        match command:
+            case 'eventstool':
+                EventsTool(config)
+    done()   
+
+
+def print_argument(func):
+    def wrapper(the_number):
+        print("Argument for", func.__name__, "is", the_number)
+        return func(the_number)
+    return wrapper
+
+
+if __name__ == '__main__':
+    check_ports('')
+    main()
