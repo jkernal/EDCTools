@@ -1,0 +1,5 @@
+05/29/2024 04:44:42 AM | __main__ - INFO - Installed: ['et-xmlfile', 'openpyxl', 'picologging']
+05/29/2024 04:44:53 AM | __main__ - INFO - Installed: ['certifi', 'charset-normalizer', 'et-xmlfile', 'idna', 'openpyxl', 'picologging', 'requests', 'urllib3']
+05/29/2024 04:45:15 AM | __main__ - INFO - Installed: ['about-time', 'alive-progress', 'certifi', 'charset-normalizer', 'et-xmlfile', 'grapheme', 'idna', 'openpyxl', 'picologging', 'requests', 'urllib3']
+05/29/2024 04:45:18 AM | __main__ - INFO - Installed: ['about-time', 'alive-progress', 'certifi', 'charset-normalizer', 'colorama', 'et-xmlfile', 'grapheme', 'idna', 'openpyxl', 'picologging', 'requests', 'urllib3']
+05/29/2024 06:01:50 AM | __main__ - INFO - Command entered: q
