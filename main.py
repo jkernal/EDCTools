@@ -88,12 +88,13 @@ except ModuleNotFoundError:
 
 #check if colorama library is installed, if not, install it
 try:
-    from colorama import *
+    from colorama import init, Fore
 except ModuleNotFoundError:
     print(f"Colorama library is not installed.")
     install_lib("colorama")
-    from colorama import *
+    from colorama import init, Fore
 
+init(autoreset=True)
 
 #define config class for easier attribute access and control
 class Config:
@@ -396,12 +397,12 @@ def main():
             case 'checkports':
                 try:
                     open_ports = check_ports(command[1])
-                    if len(open_ports) > 0:
-                        print("Ports open:")
-                        for port in open_ports:
-                            print(port)
-                    else:
-                        print("Unable to connect to any ports.")
+                    print("Ports:")
+                    for i in range(7000, 7008):
+                        if i in open_ports:
+                            print(str(i) + Fore.GREEN + "   [OPEN]")
+                        else:
+                            print(str(i) + Fore.RED + " [CLOSED]")
                 except ValueError:
                     print(f"{command[1]} is not a valid IP address.")
 
