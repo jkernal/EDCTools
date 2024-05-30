@@ -98,18 +98,20 @@ except ModuleNotFoundError:
 #define config class for easier attribute access and control
 class Config:
     
-    def __init__(self) -> None:
+    def __init__(self):
         config_exists = path.exists("config.json")
-        default_config = {'User': environ.get('USERNAME'), 'Log Level': 'INFO', 'Reset': True,'Input Directory': './', 'Template Directory': './', 'Output Directory': './'}
         if not config_exists:
             k = open("config.json", "x")
             k.close()
         with open("config.json", "w") as h:
+            default_config = {'User': environ.get('USERNAME'), 'Log Level': 'INFO', 'Reset': True,'Input Directory': './', 'Template Directory': './', 'Output Directory': './'}
             write_config = json.dumps(default_config)
             h.write(write_config)
         h.close()
         with open("config.json", "r") as file:
             config_data = json.load(file)
+            
+        print(config_data)            
         file.close()
         self._user = config_data['User']
         self._log_level = config_data['Log Level']
@@ -117,15 +119,35 @@ class Config:
         self._input_dir = config_data['Input Directory']
         self._output_dir = config_data['Output Directory']
         self._template_dir = config_data['Template Directory']
-        return None
+        match self._log_level:
+            case 'INFO':
+                logger.setLevel(logging.INFO)
+            case 'DEBUG':
+                logger.setLevel(logging.DEBUG)
+            case 'WARN':
+                logger.setLevel(logging.WARN)
+            case 'ERROR':
+                logger.setLevel(logging.ERROR)
+            case 'CRITICAL':
+                logger.setLevel(logging.CRITICAL)
 
     
-    def log_level(self) -> str:
-        #get the log level of config
+    def get_log_level(self) -> str:
         return self._log_level
     
     
-    #@log_level.setter
+    def get_input_dir(self) -> str:
+        return self._input_dir
+    
+    
+    def get_output_dir(self) -> str:
+        return self._output_dir
+    
+    
+    def get_temp_dir(self) -> str:
+        return self._template_dir
+    
+
     def change_log_level(level) -> None:
         match level:
             case 'INFO':
@@ -143,12 +165,10 @@ class Config:
 
 
 #function for required tasks before program exit
-@atexit.register()
+@atexit.register
 def exit_handler() -> None:
     time_elapsed = round((perf_counter() - T1), 3)
     logger.debug('Execution time: %s sec(s)', time_elapsed)
-    #input("throwaway")
-    exit()
 
 
 #function for tasks that need to be completed during startup
@@ -207,7 +227,7 @@ def perm_check(locs):
 
 
 #Tool for extracting address comments dynamically 
-def EventsTool(Config_obj) -> None:
+def EventsTool(Config_obj: Config) -> None:
     
     
     #gets address that need comments
@@ -234,13 +254,12 @@ def EventsTool(Config_obj) -> None:
 
 
     #find file locations
-    file_locs = [Config_obj.template_dir, Config_obj.output_dir, Config_obj.input_dir]#file_locs[template, output, input]
-
+    file_locs = Config_obj.get_temp_dir(), Config_obj.get_output_dir(), Config_obj.get_input_dir()#file_locs[template, output, input]
     #check permissions on files
     perm_check(file_locs)
 
     #open output workbook and worksheet
-    wb = load_workbook(filename=file_locs[1])
+    wb = load_workbook(filename=file_locs[2])
     ws = wb["Import Cheat Sheet"]
 
     #get address that need comments from template and get addresses with comments from input in separate threads
@@ -293,22 +312,28 @@ def EventsTool(Config_obj) -> None:
 
 
 def validate_ipv4_address(ip_address: str, private_only: Optional[bool] = True) -> bool:
+    #always accepts loopback address
+    if ip_address == "127.0.0.1":
+        return True
     octets = ip_address.split(".")
     if len(octets) != 4:
         return False
     for octet in octets:
         if not octet.isdigit():
             return False
-        if 255 > octet < 0:
+        n = int(octet)
+        if n < 0 or n > 255:
             return False
         else:
             continue
     if private_only:
-        if octets[0] == 10:
+        first_octet = int(octets[0])
+        second_octet = int(octets[1])
+        if first_octet == 10:
             pass
-        elif octets[0] == 172 and 31 > octets[1] < 15:
+        elif first_octet == 172 and second_octet > 15 and second_octet < 32:
             pass
-        elif octets[0] == 192 and octets[1] == 168:
+        elif first_octet == 192 and second_octet == 168:
             pass
         else:
             return False
@@ -336,9 +361,9 @@ def main():
     logger.debug('Python %s', version)
     logger.debug('%s', platform())
     preamble()
-    command = ''
+    user_input = ''
     print('Enter command:')
-    while command != 'q':
+    while user_input != 'q':
         user_input = input('./>').lower()
         logger.info('Input entered: %s', user_input)
         command = user_input.split(" ")

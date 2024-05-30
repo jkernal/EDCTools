@@ -5,3 +5,28 @@
 05/29/2024 06:01:50 AM | __main__ - INFO - Command entered: q
 05/29/2024 11:35:20 PM | __main__ - INFO - Installed: ['about-time', 'alive-progress', 'certifi', 'charset-normalizer', 'colorama', 'et-xmlfile', 'grapheme', 'idna', 'openpyxl', 'picologging', 'requests', 'urllib3']
 05/29/2024 11:37:38 PM | __main__ - INFO - Installed: ['about-time', 'alive-progress', 'certifi', 'charset-normalizer', 'colorama', 'et-xmlfile', 'grapheme', 'idna', 'openpyxl', 'picologging', 'requests', 'tqdm', 'urllib3']
+05/30/2024 01:20:32 AM | __main__ - INFO - Input entered: help
+05/30/2024 01:20:47 AM | __main__ - INFO - Input entered: checkports 127.0.0.1
+05/30/2024 01:21:10 AM | __main__ - INFO - Input entered: eventstool
+05/30/2024 01:27:08 AM | __main__ - INFO - Input entered: eventstool
+05/30/2024 01:28:40 AM | __main__ - INFO - Input entered: eventstool
+05/30/2024 01:31:25 AM | __main__ - INFO - Input entered: eventstool
+05/30/2024 01:32:25 AM | __main__ - INFO - Input entered: eventstool
+05/30/2024 01:33:48 AM | __main__ - INFO - Input entered: eventstool
+05/30/2024 01:44:53 AM | __main__ - INFO - Input entered: eventstool
+05/30/2024 02:49:09 AM | __main__ - INFO - Input entered: 	q
+05/30/2024 02:49:11 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:49:13 AM | __main__ - INFO - Input entered: & "c:/program files/python312/python.exe" "c:/users/459630/onedrive - tmna/documents/other/code/edctools/main.py"
+05/30/2024 02:49:16 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:49:17 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:49:18 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:49:18 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:49:20 AM | __main__ - INFO - Input entered: qq
+05/30/2024 02:49:29 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:49:29 AM | __main__ - INFO - Input entered: qq
+05/30/2024 02:51:04 AM | __main__ - INFO - Input entered: & "c:/program files/python312/python.exe" "c:/users/459630/onedrive - tmna/documents/other/code/edctools/main.py"
+05/30/2024 02:51:11 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:51:11 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:51:12 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:51:12 AM | __main__ - INFO - Input entered: q
+05/30/2024 02:51:13 AM | __main__ - INFO - Input entered: q
