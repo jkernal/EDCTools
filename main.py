@@ -14,10 +14,20 @@ from csv import reader
 from time import perf_counter
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
+from re import search
 import json
 import socket
+import atexit
 
 
+#defining program constants
+V = "v0.0.0"
+
+
+T1 = perf_counter()
+
+
+OP_SYS = platform().split("-")[0]
 
 
 #installs libraries using the command line
@@ -36,9 +46,6 @@ def install_lib(lib):
     logger.info('Installed: %s',installed_packages)
 
 
-OP_SYS = platform().split("-")[0]
-
-
 #check if picologging library is installed, if not, install it
 if OP_SYS == "Mac":
     import logging as logging
@@ -53,12 +60,6 @@ else:
 #configure logger
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename="data.log", level=logging.INFO, format='%(asctime)s | %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
-
-V = "v0.0.0"
-
-
-T1 = perf_counter()
 
 
 #check if openpyxl library is installed, if not, install it
@@ -79,17 +80,17 @@ except ModuleNotFoundError:
 
 #check if alive-progress library is installed, if not, install it
 try:
-    from alive_progress import alive_bar
+    from tqdm import tqdm
 except ModuleNotFoundError:
-    print(f"Requests library is not installed.")
-    install_lib("alive-progress")
-    from alive_progress import alive_bar
+    print(f"tqdm library is not installed.")
+    install_lib("tqdm")
+    from tqdm import tqdm
 
 #check if colorama library is installed, if not, install it
 try:
     from colorama import *
 except ModuleNotFoundError:
-    print(f"Requests library is not installed.")
+    print(f"Colorama library is not installed.")
     install_lib("colorama")
     from colorama import *
 
@@ -142,7 +143,8 @@ class Config:
 
 
 #function for required tasks before program exit
-def done() -> None:
+@atexit.register()
+def exit_handler() -> None:
     time_elapsed = round((perf_counter() - T1), 3)
     logger.debug('Execution time: %s sec(s)', time_elapsed)
     #input("throwaway")
@@ -183,6 +185,7 @@ def preamble() -> None:
     ↓↓↓↘↗↘↙↓↙↙↓→↗↓↘→→↓↗↘→↘↗→↙→←             ←↙↓↘↓↙←         
         ← ↓↗↙ ↙↖↘↗   ↓ ↑→ ←↙→                               
                        ←   ↖←   """)
+    print("Type 'help' for a list of commands.")
     return None
 #end of preamble
 
@@ -221,7 +224,6 @@ def EventsTool(Config_obj) -> None:
             array = list(reader(open(input_file_path, encoding= "ISO8859")))
         except PermissionError:
             print(f"Error: Could not access input file.")
-            done()
         except:
             print(f"""An error occurred while reading the Toyopuc Comment file.\n\n
                 Possible Causes:\n
@@ -256,7 +258,7 @@ def EventsTool(Config_obj) -> None:
     print(f"\nWorking on it...")
 
     #loop through the addresses and compare to the array with comments
-    for i in range(address_array_len):
+    for i in tqdm(range(address_array_len)):
         for address in address_comment_array:
             if address_array[i][0] == address[0]:
                 ws.cell(row=address_array[i][1], column=6).value = address[0]
@@ -290,10 +292,36 @@ def EventsTool(Config_obj) -> None:
     #end of EventsTool
 
 
-def check_ports(*args, timeout: Optional[int] = 1) -> list:
-    print(type(args))
+def validate_ipv4_address(ip_address: str, private_only: Optional[bool] = True) -> bool:
+    octets = ip_address.split(".")
+    if len(octets) != 4:
+        return False
+    for octet in octets:
+        if not octet.isdigit():
+            return False
+        if 255 > octet < 0:
+            return False
+        else:
+            continue
+    if private_only:
+        if octets[0] == 10:
+            pass
+        elif octets[0] == 172 and 31 > octets[1] < 15:
+            pass
+        elif octets[0] == 192 and octets[1] == 168:
+            pass
+        else:
+            return False
+    return True
+
+
+def check_ports(ip_address: str, timeout: Optional[int] = 1) -> list:
+    is_ipv4 = validate_ipv4_address(ip_address)
+    if not is_ipv4:
+        raise ValueError("Needs to be a valid IP address.")
     open_ports = []
-    for port in range(7000, 7008):
+    print(f"Attempting to connect to {ip_address}")
+    for port in tqdm(range(7000, 7008)):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)  # Set timeout to 1 second
         result = sock.connect_ex((ip_address, port))
@@ -311,12 +339,21 @@ def main():
     command = ''
     print('Enter command:')
     while command != 'q':
-        command = input('./>').lower()
-        logger.info('Command entered: %s', command)
-        match command:
+        user_input = input('./>').lower()
+        logger.info('Input entered: %s', user_input)
+        command = user_input.split(" ")
+        match command[0]:
+            case 'help':
+                print(" Command   |    Argument1   |    Argument2      ")
+                print("eventstool      None               None         ")
+                print("checkports     ip address      timeout(optional)")
             case 'eventstool':
                 EventsTool(config)
-    done()   
+            case 'checkports':
+                try:
+                    check_ports(command[1])
+                except ValueError:
+                    print(f"{command[1]} is not a valid IP address.")
 
 
 def print_argument(func):
@@ -327,5 +364,4 @@ def print_argument(func):
 
 
 if __name__ == '__main__':
-    check_ports('')
     main()
