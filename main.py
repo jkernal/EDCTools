@@ -9,12 +9,12 @@
 from sys import executable, version
 from platform import system, platform
 from subprocess import check_call, check_output
-from os import system, access, environ, path, R_OK, W_OK, X_OK
+from os import system, access, getcwd, listdir, environ, path, R_OK, W_OK, X_OK
 from csv import reader
 from time import perf_counter
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
-from re import search
+from shutil import copyfile
 import json
 import socket
 import atexit
@@ -99,15 +99,15 @@ except ModuleNotFoundError:
 class Config:
     
     def __init__(self):
-        config_exists = path.exists("config.json")
+        config_exists = path.isfile("config.json")
         if not config_exists:
             k = open("config.json", "x")
             k.close()
-        with open("config.json", "w") as h:
-            default_config = {'User': environ.get('USERNAME'), 'Log Level': 'INFO', 'Reset': True,'Input Directory': './', 'Template Directory': './', 'Output Directory': './'}
-            write_config = json.dumps(default_config)
-            h.write(write_config)
-        h.close()
+            with open("config.json", "w") as h:
+                default_config = {'User': environ.get('USERNAME'), 'Log Level': 'INFO', 'Reset': True,'Input Directory': './', 'Template Directory': './', 'Output Directory': './'}
+                write_config = json.dumps(default_config)
+                h.write(write_config)
+                h.close()
         with open("config.json", "r") as file:
             config_data = json.load(file)
             
@@ -227,7 +227,7 @@ def perm_check(locs):
 
 
 #Tool for extracting address comments dynamically 
-def EventsTool(Config_obj: Config) -> None:
+def EventsTool(Config_obj: Config, acronym: str) -> None:
     
     
     #gets address that need comments
@@ -254,18 +254,38 @@ def EventsTool(Config_obj: Config) -> None:
 
 
     #find file locations
-    file_locs = Config_obj.get_temp_dir(), Config_obj.get_output_dir(), Config_obj.get_input_dir()#file_locs[template, output, input]
+    cwrd = getcwd()
+    file_locs = dict()
+    if Config_obj.get_input_dir() == "./":
+        file_locs.update({"input": cwrd + "\\input"})
+    else:
+        file_locs.update({"input": Config_obj.get_input_dir()})
+    if Config_obj.get_temp_dir() == "./":
+        file_locs.update({"template": cwrd + "\\template"})
+    else:
+        file_locs.update({"template": Config_obj.get_temp_dir()})
+    if Config_obj.get_output_dir() == "./":
+        file_locs.update({"output": cwrd + "\\output"})
+    else:
+        file_locs.update({"output": Config_obj.get_output_dir()})
+    
+    #define path variables for files
+    in_file_path = file_locs["input"] + "\\" + listdir(file_locs["input"])[0]
+    temp_file_path = file_locs["template"] + "\\" + listdir(file_locs["template"])[0]
+    out_file_path = file_locs["output"] + "\\" + acronym + ".xlsx"
+    copyfile(temp_file_path, out_file_path)
+
     #check permissions on files
-    perm_check(file_locs)
+    perm_check([temp_file_path, out_file_path, in_file_path])
 
     #open output workbook and worksheet
-    wb = load_workbook(filename=file_locs[2])
+    wb = load_workbook(filename=out_file_path)
     ws = wb["Import Cheat Sheet"]
 
     #get address that need comments from template and get addresses with comments from input in separate threads
     with ThreadPoolExecutor() as executor:
         f1 = executor.submit(get_address_array_from_temp, ws)
-        f2 = executor.submit(get_address_comment_array_from_input, file_locs[2])
+        f2 = executor.submit(get_address_comment_array_from_input, in_file_path)
     #wait for results from both threads
     address_array = f1.result()
     address_comment_array = f2.result()
@@ -299,7 +319,7 @@ def EventsTool(Config_obj: Config) -> None:
                     continue
     
     #save changes to the output file
-    wb.save(file_locs[1])
+    wb.save(out_file_path)
     
     #display stats and warning if needed
     print("\nDone.", flush=True)
@@ -370,10 +390,10 @@ def main():
         match command[0]:
             case 'help':
                 print(" Command   |    Argument1   |    Argument2      ")
-                print("eventstool      None               None         ")
+                print("eventstool       acronym           None         ")
                 print("checkports     ip address      timeout(optional)")
             case 'eventstool':
-                EventsTool(config)
+                EventsTool(config, "FSMB")
             case 'checkports':
                 try:
                     check_ports(command[1])
