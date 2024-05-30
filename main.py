@@ -320,6 +320,7 @@ def EventsTool(Config_obj: Config, acronym: str) -> None:
     
     #save changes to the output file
     wb.save(out_file_path)
+    wb.close()
     
     #display stats and warning if needed
     print("\nDone.", flush=True)
