@@ -392,11 +392,18 @@ def main():
                 print(" Command   |    Argument1   |    Argument2      ")
                 print("eventstool       acronym           None         ")
                 print("checkports     ip address      timeout(optional)")
+                print("     q to quit")
             case 'eventstool':
                 EventsTool(config, "FSMB")
             case 'checkports':
                 try:
-                    check_ports(command[1])
+                    open_ports = check_ports(command[1])
+                    if len(open_ports) > 0:
+                        print("Ports open:")
+                        for port in open_ports:
+                            print(port)
+                    else:
+                        print("Unable to connect to any ports.")
                 except ValueError:
                     print(f"{command[1]} is not a valid IP address.")
 

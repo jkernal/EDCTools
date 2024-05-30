@@ -94,3 +94,14 @@
 05/30/2024 05:42:29 AM | __main__ - INFO - Input entered: & "c:/program files/python312/python.exe" "c:/users/459630/onedrive - tmna/documents/other/code/edctools/main.py"
 05/30/2024 05:42:34 AM | __main__ - INFO - Input entered: q
 05/30/2024 05:42:34 AM | __main__ - DEBUG - Execution time: 79.691 sec(s)
+05/30/2024 05:47:05 AM | __main__ - DEBUG - Python 3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]
+05/30/2024 05:47:05 AM | __main__ - DEBUG - Windows-10-10.0.19045-SP0
+05/30/2024 05:47:14 AM | __main__ - INFO - Input entered: help
+05/30/2024 05:47:20 AM | __main__ - INFO - Input entered: checkports 10.91.78.12
+05/30/2024 05:50:49 AM | __main__ - INFO - Input entered: q
+05/30/2024 05:50:49 AM | __main__ - DEBUG - Execution time: 224.562 sec(s)
+05/30/2024 05:57:35 AM | __main__ - DEBUG - Python 3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]
+05/30/2024 05:57:35 AM | __main__ - DEBUG - Windows-10-10.0.19045-SP0
+05/30/2024 05:57:41 AM | __main__ - INFO - Input entered: checkports 10.91.78.12
+05/30/2024 05:57:47 AM | __main__ - INFO - Input entered: q
+05/30/2024 05:57:47 AM | __main__ - DEBUG - Execution time: 12.671 sec(s)
