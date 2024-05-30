@@ -8,3 +8,6 @@
 05/30/2024 06:30:20 AM | __main__ - INFO - Input entered: checkports 10.91.10.10
 05/30/2024 06:31:03 AM | __main__ - INFO - Input entered: checkports 10.91.70.10
 05/30/2024 06:33:25 AM | __main__ - INFO - Input entered: q
+05/30/2024 06:33:39 AM | __main__ - INFO - Input entered: checkports 10.91.70.10
+05/30/2024 06:33:51 AM | __main__ - INFO - Input entered: checkports 127.0.0.1
+05/30/2024 06:34:09 AM | __main__ - INFO - Input entered: q
