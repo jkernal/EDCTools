@@ -109,9 +109,7 @@ class Config:
                 h.write(write_config)
                 h.close()
         with open("config.json", "r") as file:
-            config_data = json.load(file)
-            
-        print(config_data)            
+            config_data = json.load(file)        
         file.close()
         self._user = config_data['User']
         self._log_level = config_data['Log Level']
@@ -180,7 +178,6 @@ def preamble() -> None:
     print("Checking for updates...", end="",flush=True)
     try:
         response = get(f"https://api.github.com/repos/{owner}/{repo}/releases/latest")
-        print(response.json())
         if V != response.json()["tag_name"]:
             print("[DONE]")
             print(f"***Warning: There is a new release of this tool.***")
