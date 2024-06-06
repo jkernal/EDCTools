@@ -93,6 +93,15 @@ except ModuleNotFoundError:
     print(f"Colorama library is not installed.")
     install_lib("colorama")
     from colorama import init, Fore
+    
+#check if scapy library is installed, if not, install it
+try:
+    import scapy
+except ModuleNotFoundError:
+    print(f"scapy library is not installed.")
+    install_lib("scapy")
+    import scapy
+
 
 init(autoreset=True)
 
@@ -364,14 +373,16 @@ def check_ports(ip_address: str, timeout: Optional[int] = 1) -> list:
     if not is_ipv4:
         raise ValueError("Needs to be a valid IP address.")
     open_ports = []
-    print(f"Attempting to connect to {ip_address}")
+    print("Attempting to connect on ports 7000 to 7007...")
     for port in tqdm(range(7000, 7008)):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)  # Set timeout to 1 second
-        result = sock.connect_ex((ip_address, port))
-        if result == 0:
+        try:
+            sock.connect((ip_address, port))
             open_ports.append(port)
-        sock.close()
+            sock.close()
+        except:
+            continue
     return open_ports
 
 
@@ -415,4 +426,9 @@ def print_argument(func):
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+    # for node in range(1):
+    #     ip = "10.91.78."+ str(node)
+    #     print(ip)
+    #     print(check_ports(ip))
+    

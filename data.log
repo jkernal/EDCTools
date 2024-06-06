@@ -11,3 +11,4 @@
 05/30/2024 06:33:39 AM | __main__ - INFO - Input entered: checkports 10.91.70.10
 05/30/2024 06:33:51 AM | __main__ - INFO - Input entered: checkports 127.0.0.1
 05/30/2024 06:34:09 AM | __main__ - INFO - Input entered: q
+06/05/2024 03:14:57 AM | __main__ - INFO - Installed: ['about-time', 'alive-progress', 'certifi', 'charset-normalizer', 'colorama', 'et-xmlfile', 'grapheme', 'idna', 'openpyxl', 'picologging', 'requests', 'scapy', 'tqdm', 'urllib3']
