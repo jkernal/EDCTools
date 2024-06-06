@@ -157,17 +157,16 @@ class Config:
     
 
     def change_log_level(level) -> None:
-        match level:
-            case 'INFO':
-                logger.setLevel(logging.INFO)
-            case 'DEBUG':
-                logger.setLevel(logging.DEBUG)
-            case 'WARN':
-                logger.setLevel(logging.WARN)
-            case 'ERROR':
-                logger.setLevel(logging.ERROR)
-            case 'CRITICAL':
-                logger.setLevel(logging.CRITICAL)
+        if level == 'INFO':
+            logger.setLevel(logging.INFO)
+        elif level == 'DEBUG':
+            logger.setLevel(logging.DEBUG)
+        elif level == 'WARN':
+            logger.setLevel(logging.WARN)
+        elif level == 'ERROR':
+            logger.setLevel(logging.ERROR)
+        elif level == 'CRITICAL':
+            logger.setLevel(logging.CRITICAL)
         return None
 
 
@@ -397,25 +396,24 @@ def main():
         user_input = input('./>').lower()
         logger.info('Input entered: %s', user_input)
         command = user_input.split(" ")
-        match command[0]:
-            case 'help':
-                print(" Command   |    Argument1   |    Argument2      ")
-                print("eventstool       acronym           None         ")
-                print("checkports     ip address      timeout(optional)")
-                print("     q to quit")
-            case 'eventstool':
-                EventsTool(config, "FSMB")
-            case 'checkports':
-                try:
-                    open_ports = check_ports(command[1])
-                    print("Ports:")
-                    for i in range(7000, 7008):
-                        if i in open_ports:
-                            print(str(i) + Fore.GREEN + "   [OPEN]")
-                        else:
-                            print(str(i) + Fore.RED + " [CLOSED]")
-                except ValueError:
-                    print(f"{command[1]} is not a valid IP address.")
+        if command[0] == 'help':
+            print(" Command   |    Argument1   |    Argument2      ")
+            print("eventstool       acronym           None         ")
+            print("checkports     ip address      timeout(optional)")
+            print("     q to quit")
+        elif command[0] == 'eventstool':
+            EventsTool(config, "FSMB")
+        elif command[0] == 'checkports':
+            try:
+                open_ports = check_ports(command[1])
+                print("Ports:")
+                for i in range(7000, 7008):
+                    if i in open_ports:
+                        print(str(i) + Fore.GREEN + "   [OPEN]")
+                    else:
+                        print(str(i) + Fore.RED + " [CLOSED]")
+            except ValueError:
+                print(f"{command[1]} is not a valid IP address.")
 
 
 def print_argument(func):
@@ -426,9 +424,5 @@ def print_argument(func):
 
 
 if __name__ == '__main__':
-    #main()
-    # for node in range(1):
-    #     ip = "10.91.78."+ str(node)
-    #     print(ip)
-    #     print(check_ports(ip))
+    main()
     
