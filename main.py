@@ -184,14 +184,16 @@ def preamble() -> None:
     owner = "jkernal"
     repo = "EDCTools"
     print("Checking for updates...", end="",flush=True)
-    try:
-        response = get(f"https://api.github.com/repos/{owner}/{repo}/releases/latest")
+    response = get(f"http://api.github.com/repos/{owner}/{repo}/releases/latest")
+    print(response)
+    """     try:
+        response = get(f"http://api.github.com/repos/{owner}/{repo}/releases/latest")
         if V != response.json()["tag_name"]:
             print("[DONE]")
             print(f"***Warning: There is a new release of this tool.***")
     except:
         print("[FAILED]")
-        print("***Warning: Could not connect to repository. Version check failed.***")
+        print("***Warning: Could not connect to repository. Version check failed.***") """
     print("""                                                 
    ↖↗→→→→→→→→→→→→→→↗→→→→→→→→→→↙          ↖↓→↓←←←←↙↘↘←       
    ↖→↖↖↖↖↖↖↖↖↖↖↖↖↖↖↑↖↖↖↖↖↖↖↖↖↖↙↙  ←    →↙←↖↖↖←↓↓↙↖↖↖←↙↘←    
@@ -317,7 +319,7 @@ def EventsTool(Config_obj: Config, acronym: str) -> None:
     #ws.cell(row=address_array[i][1], column=6).value = address[0][3:] key
     #ws.cell(row=address_array[i][1], column=7).value = address[1] value
     
-    print(address_comment_dict.keys())
+    #print(address_comment_dict.keys())
     for i in tqdm(range(address_array_len)):
         if address_array[i][0] in address_comment_dict:
             ws.cell(row=address_array[i][1], column=6).value = address_array[i][0]
@@ -402,7 +404,7 @@ def main():
             print("checkports     ip address      timeout(optional)")
             print("     q to quit")
         elif command[0] == 'eventstool':
-            EventsTool(config, "FSMB")
+            EventsTool(config, command[1])
         elif command[0] == 'checkports':
             try:
                 open_ports = check_ports(command[1])
