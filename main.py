@@ -10,7 +10,7 @@ from sys import executable, version
 from platform import system, platform
 from subprocess import check_call, check_output
 from os import system, access, getcwd, listdir, environ, path, R_OK, W_OK, X_OK
-from csv import reader
+from csv import reader, DictReader
 from time import perf_counter
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
@@ -42,8 +42,7 @@ def install_lib(lib):
     # process output with an API in the subprocess module:
     requests = check_output([executable, '-m', 'pip','freeze'])
     installed_packages = [r.decode().split('==')[0] for r in requests.split()]
-
-    logger.info('Installed: %s',installed_packages)
+    print(installed_packages)
 
 
 #check if picologging library is installed, if not, install it
@@ -241,13 +240,22 @@ def EventsTool(Config_obj: Config, acronym: str) -> None:
         array = []
         for i in range(sheet.max_row):
             array.append([sheet.cell(i+3,2).value, i + 3])
+        print(array)
         return array
     
     
     #gets all address that have comments
-    def get_address_comment_array_from_input(input_file_path) -> list:
+    def get_address_comment_array_from_input(input_file_path) -> dict:
         try:
-            array = list(reader(open(input_file_path, encoding= "ISO8859")))
+            #plc_dict = list(reader(open(input_file_path, encoding= "ISO8859")))
+            data = {}
+            with open(input_file_path, mode='r', encoding='ISO8859') as file:
+                read = reader(file)
+                for row in read:
+                    if len(row) >= 2:  # Ensure there are at least two elements
+                        key = row[0]
+                        value = row[1]
+                        data[key] = value
         except PermissionError:
             print(f"Error: Could not access input file.")
         except:
@@ -256,11 +264,13 @@ def EventsTool(Config_obj: Config, acronym: str) -> None:
                 -Too many fields in the file (max 131072)
                 -The data is not supported under 'ISO8859' encoding
                 -The file is in use""")
-        return array
+        #for key, value in data.items():
+        #    print(f"Key: {key}, Value: {value}")
+        return data
 
 
     #find file locations
-    cwrd = getcwd()
+    cwrd = getcwd()#CWRD stands for Current Working Directory
     file_locs = dict()
     if Config_obj.get_input_dir() == "./":
         file_locs.update({"input": cwrd + "\\input"})
@@ -294,7 +304,7 @@ def EventsTool(Config_obj: Config, acronym: str) -> None:
         f2 = executor.submit(get_address_comment_array_from_input, in_file_path)
     #wait for results from both threads
     address_array = f1.result()
-    address_comment_array = f2.result()
+    address_comment_dict = f2.result()
     #close executor
     executor.shutdown()
 
@@ -303,26 +313,16 @@ def EventsTool(Config_obj: Config, acronym: str) -> None:
     print(f"\nWorking on it...")
 
     #loop through the addresses and compare to the array with comments
+    
+    #ws.cell(row=address_array[i][1], column=6).value = address[0][3:] key
+    #ws.cell(row=address_array[i][1], column=7).value = address[1] value
+    
+    print(address_comment_dict.keys())
     for i in tqdm(range(address_array_len)):
-        for address in address_comment_array:
-            if address_array[i][0] == address[0]:
-                ws.cell(row=address_array[i][1], column=6).value = address[0]
-                ws.cell(row=address_array[i][1], column=7).value = address[1]
-                match_count+=1
-            elif address[0][:4] == "P1-X":
-                if address_array[i][0] == address[0][3:]:
-                    ws.cell(row=address_array[i][1], column=6).value = address[0][3:]
-                    ws.cell(row=address_array[i][1], column=7).value = address[1]
-                    match_count+=1
-                else:
-                    continue
-            elif address[0][:4] == "P2-D":
-                if address_array[i][0] == address[0][3:]:
-                    ws.cell(row=address_array[i][1], column=6).value = address[0][3:]
-                    ws.cell(row=address_array[i][1], column=7).value = address[1]
-                    match_count+=1
-                else:
-                    continue
+        if address_array[i][0] in address_comment_dict:
+            ws.cell(row=address_array[i][1], column=6).value = address_array[i][0]
+            ws.cell(row=address_array[i][1], column=7).value = address_comment_dict[address_array[i][0]]
+            match_count += 1
     
     #save changes to the output file
     wb.save(out_file_path)
