@@ -10,6 +10,9 @@
 //encoding_rs_io = "0.1"
 
 
+//imports
+use std::env;
+use std::time::Instant;
 use std::{fs::{self, File}, io::{BufReader, Write}, path::{PathBuf}};
 use csv::{ReaderBuilder};
 use encoding_rs::UTF_16LE;
@@ -39,24 +42,23 @@ fn get_first_file(dir_path: &str) -> Option<PathBuf> {
     //Handle reading errors - if there are any errors I assume its an empty directory.
     let entries = match entries_result {
         Ok(dir_rdr) => dir_rdr,
-        Err(e) => {
-            error!("{}", e);
+        Err(error) => {
+            error!("{error}");
             return None;
         }
     };
 
     //loop through the array of entries and return the first file. (there could be directories in the entries array)
-    for entry in entries {
-        if let Ok(entry) = entry {
-            let path = entry.path();
-            if path.is_file() {
-                return Some(path);
-            }
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_file() {
+            return Some(path);
         }
+        
     }
 
     //if the code gets here no files were found.
-    return None
+    None
 }
 
 
@@ -81,10 +83,10 @@ fn pad_or_truncate(input: &str, size: usize) -> Vec<u8> {
     if bytes.len() > size {
         bytes.truncate(size);
     } else if bytes.len() < size {
-        bytes.extend(std::iter::repeat(b' ').take(size - bytes.len()));
+        bytes.resize(size, b' ');
     }
     
-    return bytes;
+    bytes
 
 }
 
@@ -111,7 +113,7 @@ fn get_screenwroks_comments(csv_path: &str, addr_index: usize, comment_index: us
     //Handle opening errors
     let csv_file = match file_result  {
         Ok(file) => file,
-        Err(error) => panic!("There was a problem opening the csv file.\n{}", error)
+        Err(error) => panic!("There was a problem opening the csv file.\n{error}")
     };
 
     //The ScreenWorks software exports csv in UTF-16 LE so a conversion is needed:
@@ -137,19 +139,20 @@ fn get_screenwroks_comments(csv_path: &str, addr_index: usize, comment_index: us
     let mut comment;
     let mut addr_field;
     let mut comment_field;
+    let mut record_count = 0;
     for line in iter {
         //Handle string errors
         let record = match line {
             Ok(rec) => rec,
             Err(error) => {
-                debug!("Error reading this line: {}", error);
+                debug!("Error reading this line: {error}");
                 continue; //Skip errored line
             }
         };
         
         //check to make sure the indices are accessible
         if record.len() <= comment_index || record.len() <= addr_index {
-            debug!("Skipping malformed or short record: {:?}", record);
+            debug!("Skipping malformed or short record: {record:?}");
             continue;
         }
 
@@ -172,10 +175,12 @@ fn get_screenwroks_comments(csv_path: &str, addr_index: usize, comment_index: us
         //remove spaces from start and end
         comment = replaced_comment.trim().to_string();
 
+        debug!("{address} = {comment}");
+
         //put the address string in a 96 byte field, left justified
-        addr_field = format!("{:<64}", address);
+        addr_field = format!("{address:<64}");
         //put the comment string in a 96 byte field, left justified
-        comment_field = format!("{:<96}", comment);
+        comment_field = format!("{comment:<96}");
 
         //confirm or correct field size then combine the two field to complete an address and comment pair
         let mut record_bytes = pad_or_truncate(&addr_field, 64);
@@ -185,12 +190,20 @@ fn get_screenwroks_comments(csv_path: &str, addr_index: usize, comment_index: us
 
         //add the complete record to the records array
         records.push(record_bytes);
-
-        debug!("{} = {}", address, comment);
+        record_count += 1;
 
     }
 
-    return records;
+    //log how many records were found
+    if record_count > 1 {
+        info!("Found {record_count} comments in the ScreenWorks csv file.");
+    } else if record_count == 1 {
+        info!("Found {record_count} comment in the ScreenWorks csv file.");
+    } else {
+        info!("No comments found in the ScreenWorks csv file.");
+    }
+
+    records
 
 }
 
@@ -217,7 +230,7 @@ fn get_toyopuc_comments(csv_path: &str, addr_index: usize, comment_index: usize)
     //Handle opening errors
     let csv_file = match file_result  {
         Ok(file) => file,
-        Err(error) => panic!("There was a problem opening the csv file.\n{}", error)
+        Err(error) => panic!("There was a problem opening the csv file.\n{error}")
     };
 
     //Construct a reader object
@@ -231,25 +244,26 @@ fn get_toyopuc_comments(csv_path: &str, addr_index: usize, comment_index: usize)
     //Create iterator for csv file
     let iter = csv_reader.records();
 
-    //loop and print all lines
+    //loop and write all address and comment pairs to the array
     let mut records = Vec::new();
     let mut address;
     let mut comment;
     let mut addr_field;
     let mut comment_field;
+    let mut record_count = 0;
     for line in iter {
         //Handle string errors
         let record = match line {
             Ok(rec) => rec,
             Err(error) => {
-                debug!("Error reading this line: {}", error);
+                debug!("Error reading this line: {error}");
                 continue; //Skip errored line
             }
         };
         
         //Check to make sure the indices are accessible
         if record.len() <= comment_index || record.len() <= addr_index {
-            debug!("Skipping malformed or short record: {:?}", record);
+            debug!("Skipping malformed or short record: {record:?}");
             continue;
         }
 
@@ -272,10 +286,12 @@ fn get_toyopuc_comments(csv_path: &str, addr_index: usize, comment_index: usize)
         //remove spaces from start and end
         comment = replaced_comment.trim().to_string();
 
+        debug!("{address} = {comment}");
+
         //put the address string in a 96 byte field, left justified
-        addr_field = format!("{:<64}", address);
+        addr_field = format!("{address:<64}");
         //put the comment string in a 96 byte field, left justified
-        comment_field = format!("{:<96}", comment);
+        comment_field = format!("{comment:<96}");
 
         //confirm or correct field size then combine the two field to complete an address and comment pair
         let mut record_bytes = pad_or_truncate(&addr_field, 64);
@@ -285,12 +301,21 @@ fn get_toyopuc_comments(csv_path: &str, addr_index: usize, comment_index: usize)
 
         //add the complete record to the records array
         records.push(record_bytes);
-
-        debug!("{} = {}", address, comment);
+        record_count += 1;
 
     }
 
-    return records;
+    //log how many records were found
+    if record_count > 1 {
+        info!("Found {record_count} comments in the Toyopuc csv file.");
+    } else if record_count == 1 {
+        info!("Found {record_count} comment in the Toyopuc csv file.");
+    } else {
+        info!("No comments found in the Toyopuc csv file.");
+    }
+
+    records
+
 }
 
 
@@ -313,8 +338,8 @@ fn write_comments_table_file(contents: Vec<Vec<u8>>, bin_path: &str) -> bool {
     //handle file creation errors
     let mut output_file = match output_file_result {
         Ok(file) => file,
-        Err(e) => {
-            error!("An error occurred when trying to create/open {}.\n{}", bin_path, e);
+        Err(error) => {
+            error!("An error occurred when trying to create/open {bin_path}.\n{error}");
             return false;
         }
     };
@@ -324,14 +349,14 @@ fn write_comments_table_file(contents: Vec<Vec<u8>>, bin_path: &str) -> bool {
 
         match output_file.write_all(&chunk) {
             Ok(_) => {},
-            Err(e) => {
-                error!("Failed to write data: {}", e);
+            Err(error) => {
+                error!("Failed to write data: {error}");
                 continue;
             }
         }
     }
 
-    return true;
+    true //indicate that the write was successful
 
 }
 
@@ -357,11 +382,46 @@ fn main() {
     None
     */
 
+    // Start the timer to measure execution time
+    let start = Instant::now();
+
+    //get the current exe directory
+    let exe_path = match env::current_exe(){
+        Ok(path) => path,
+        Err(error) => {
+            println!("Failed to get current executable path: {error}");
+            return;
+        }
+    };
+    
+    let exe_dir = match exe_path.parent() {
+        Some(path) => path,
+        None => {
+            println!("Failed to get parent directory of the executable path.");
+            return;
+        }
+    };
+
+    //create the path to the config file
+    let config_path = exe_dir.join("config.toml");
+
+    //convert the config_path to a string
+    let config_path_str = match config_path.to_str() {
+        Some(path_str) => path_str,
+        None => {
+            println!("Failed to convert executable directory to string.");
+            return;
+        }
+    };
+
     //load the user config
-    let user_config = load_config();
+    let user_config = load_config(config_path_str);
 
     //initialize the global logger
     init_logger(&user_config.log_level, "address_comment_loader");
+
+    debug!("Working directory: {}", exe_dir.display());
+    debug!("User config: {user_config:?}");
 
     //convert the user_config sw_output_path to a PathBuf type
     let sw_out_path = PathBuf::from(&user_config.sw_output_path);
@@ -370,9 +430,9 @@ fn main() {
     if sw_out_path.is_file() {
         match fs::remove_file(&sw_out_path) {
             Ok(_) => {},
-            Err(e) => {
+            Err(error) => {
                 let path_str = sw_out_path.to_string_lossy();
-                info!("Failed to delete {} | {}", path_str, e);
+                info!("Failed to delete {path_str} | {error}");
             }
         }
     }
@@ -384,9 +444,9 @@ fn main() {
     if toyo_out_path.is_file() {
         match fs::remove_file(&toyo_out_path) {
             Ok(_) => {},
-            Err(e) => {
+            Err(error) => {
                 let path_str = toyo_out_path.to_string_lossy();
-                info!("Failed to delete {} | {}", path_str, e);
+                info!("Failed to delete {path_str} | {error}");
             }
         }
     }
@@ -407,10 +467,7 @@ fn main() {
     };
 
     //convert the pathbuf to a string
-    let screenworks_csv_path = match screenworks_csv_pathbuf.to_str() {
-        Some(path_str) => path_str,
-        None => "Not found"
-    };
+    let screenworks_csv_path = screenworks_csv_pathbuf.to_str().unwrap_or("Not found");
 
     let toyopuc_csv_exists: bool;
 
@@ -428,10 +485,7 @@ fn main() {
     };
 
     //convert the pathbuf to a string
-    let toyopuc_csv_path = match toyopuc_csv_pathbuf.to_str() {
-        Some(path_str) => path_str,
-        None => "Not found"
-    };
+    let toyopuc_csv_path = toyopuc_csv_pathbuf.to_str().unwrap_or("Not found");
 
     let mut sw_file_write_complete = false;
 
@@ -469,4 +523,8 @@ fn main() {
     } else {
         info!("No files wrote. Something might be wrong.");
     }
+
+    //log the execution time
+    let elapsed = start.elapsed();
+    info!("Execution time: {elapsed:.2?}");
 }

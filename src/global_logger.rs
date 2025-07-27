@@ -40,9 +40,9 @@ pub fn init_logger(level: &str, basename: &str) {
             )
             //settings for max file size and rotating between log files
             .rotate(
-                Criterion::Size(1_000_000), // 1 MB max file size
+                Criterion::Size(26_214_400), // 25 MB max file size
                 Naming::Timestamps,         // Use timestamped rotated files
-                Cleanup::KeepLogFiles(20)    // Keep last 5 logs
+                Cleanup::KeepLogFiles(20)    // Keep last 20 logs
             )
             .start()
             .unwrap();

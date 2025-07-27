@@ -27,9 +27,9 @@ pub struct Settings {
 }
 
 //opens file and reads variables into a config object
-pub fn load_config() -> Settings {
+pub fn load_config(path: &str) -> Settings {
     let builder = config::Config::builder()
-        .add_source(config::File::with_name("config")) // looks for "config.toml"
+        .add_source(config::File::with_name(path)) // Load the config file
         .build()
         .expect("Failed to build config");
 
