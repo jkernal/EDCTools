@@ -11,6 +11,7 @@
 
 
 //imports
+use std::env;
 use std::time::Instant;
 use std::{fs::{self, File}, io::{BufReader, Write}, path::{PathBuf}};
 use csv::{ReaderBuilder};
@@ -362,8 +363,37 @@ fn main() {
     // Start the timer to measure execution time
     let start = Instant::now();
 
+    //get the current exe directory
+    let exe_path = match env::current_exe(){
+        Ok(path) => path,
+        Err(e) => {
+            println!("Failed to get current executable path: {}", e);
+            return;
+        }
+    };
+    
+    let exe_dir = match exe_path.parent() {
+        Some(path) => path,
+        None => {
+            println!("Failed to get parent directory of the executable path.");
+            return;
+        }
+    };
+
+    //create the path to the config file
+    let config_path = exe_dir.join("config.toml");
+
+    //convert the config_path to a string
+    let config_path_str = match config_path.to_str() {
+        Some(path_str) => path_str,
+        None => {
+            println!("Failed to convert executable directory to string.");
+            return;
+        }
+    };
+
     //load the user config
-    let user_config = load_config();
+    let user_config = load_config(config_path_str);
 
     //initialize the global logger
     init_logger(&user_config.log_level, "address_comment_loader");
